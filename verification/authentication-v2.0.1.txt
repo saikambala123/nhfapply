@@ -1,0 +1,26 @@
+Appli-Fill 2.0.1 verification
+
+PASS: npm run lint (no warnings or errors)
+PASS: npx tsc --noEmit
+PASS: npm run build (with a temporary verification-only JWT_SECRET)
+PASS: npm run ext:build (Chrome/Edge and Firefox packages rebuilt)
+PASS: npm run test:extension-auth
+  10 worker scenarios: dashboard authentication, trusted tab/origin, caller checks,
+  HTTPS checks, 72-hour expiry, background activity, daily use, revocation,
+  repeat welcomes, and authentication request expiry.
+  Actual API and JWT/session code exercised with an in-memory persistence adapter.
+PASS: node test/background.spec.mjs (29 checks)
+PASS: npm run test:api (12 checks)
+PASS: node test/ui-regressions.spec.mjs (25 checks)
+PASS: popup and worker exercised together in a DOM environment:
+  authentication screen, dashboard navigation, automatic login, welcome,
+  logout, repeat welcome, and no runtime errors.
+PASS: Sidebar rendered in a DOM environment:
+  destination links, dashboard logo, menu closes on navigation and Escape.
+
+LIMITATIONS:
+Live Chromium execution and live MongoDB execution were blocked by the
+execution environment's socket restrictions. DOM/adapter tests do not replace
+an installed-extension end-to-end test against the deployed application.
+No deployment, real account login, Google OAuth, or live portal test was run.
+No verification secret or generated environment file is included in the ZIP.

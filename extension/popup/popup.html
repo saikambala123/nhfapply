@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en" class="is-booting">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Appli-Fill</title>
+  <link rel="icon" href="../icons/icon32.png" type="image/png" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <!-- ============ Authentication ============ -->
+  <section id="view-auth" class="view" hidden>
+    <header class="brand">
+      <img class="brand__mark" src="../icons/icon128.png" width="52" height="52" alt="" />
+      <span class="brand__name">Appli<span>-Fill</span><small>YOUR APPLICATION ASSISTANT</small></span>
+    </header>
+
+    <div class="auth-hero">
+      <div class="auth-orbit" aria-hidden="true"><img src="../icons/icon128.png" width="72" height="72" alt="" /></div>
+      <h1 class="title">Authenticate on web</h1>
+      <p class="sub">Sign in to your dashboard. Your extension connects automatically and syncs your profile and saved answers.</p>
+    </div>
+    <p id="auth-error" class="error" role="alert" hidden></p>
+    <p id="auth-status" class="hint" role="status" hidden>Waiting for dashboard sign-in. Open the extension again when you're signed in.</p>
+    <button id="authenticate-btn" class="btn btn--primary">Authenticate now</button>
+    <button id="open-dashboard" class="btn btn--ghost">Open dashboard</button>
+    <p class="hint auth-note">For your privacy, sign in again after 3 days without using the extension.</p>
+
+    <details class="advanced">
+      <summary>Using your own server?</summary>
+      <input id="apiBase" class="input" placeholder="http://localhost:3000" />
+      <p class="hint">Only change this if you deployed Appli-Fill to your own domain.</p>
+    </details>
+  </section>
+
+  <!-- ============ Authenticated ============ -->
+  <section id="view-main" class="view" hidden>
+    <header class="brand brand--row">
+      <img class="brand__mark" src="../icons/icon128.png" width="52" height="52" alt="" />
+      <span class="brand__name">Appli<span>-Fill</span><small>YOUR APPLICATION ASSISTANT</small></span>
+      <span id="plan-badge" class="badge" hidden>Premium</span>
+    </header>
+
+    <!-- What this page is, and what the last run did to it. -->
+    <div class="status" id="status">
+      <span class="status__dot" id="status-dot"></span>
+      <div class="status__text">
+        <p class="status__title" id="status-title">Checking this page…</p>
+        <p class="status__body" id="status-body"></p>
+      </div>
+    </div>
+
+    <!-- The result of the last fill, broken down. Hidden until there is one. -->
+    <div class="result" id="result" hidden>
+      <div class="result__bar" aria-hidden="true">
+        <span class="result__seg result__seg--filled" id="bar-filled"></span>
+        <span class="result__seg result__seg--drafted" id="bar-drafted"></span>
+        <span class="result__seg result__seg--todo" id="bar-todo"></span>
+      </div>
+      <ul class="result__keys">
+        <li><span class="dot dot--filled"></span><b id="key-filled">0</b> filled</li>
+        <li id="key-drafted-row" hidden><span class="dot dot--drafted"></span><b id="key-drafted">0</b> drafted</li>
+        <li id="key-todo-row" hidden><span class="dot dot--todo"></span><b id="key-todo">0</b> need you</li>
+      </ul>
+    </div>
+
+    <div class="fill-actions">
+      <button id="fill-btn" class="btn btn--primary">Fill this application</button>
+      <button id="stop-btn" class="btn btn--danger" hidden>Stop</button>
+    </div>
+
+    <div class="row">
+      <label class="label label--inline" for="profile-select">Profile</label>
+      <select id="profile-select" class="input input--sm"></select>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="stat__value" id="stat-fields">—</span>
+        <span class="stat__label">filled here</span>
+      </div>
+      <div class="stat">
+        <span class="stat__value" id="stat-apps">—</span>
+        <span class="stat__label">applications</span>
+      </div>
+      <div class="stat">
+        <span class="stat__value" id="stat-answers">—</span>
+        <span class="stat__label">saved answers</span>
+      </div>
+    </div>
+
+    <div id="pending" class="pending" hidden>
+      <div class="pending__row">
+        <span id="pending-note" class="pending__note"></span>
+        <button id="view-pending" class="pending__btn" type="button" aria-expanded="false"
+                aria-controls="pending-list">View</button>
+        <button id="save-all-held" class="pending__btn pending__btn--save" type="button" hidden
+                aria-label="Save all unsaved answers">Save all</button>
+        <button id="clear-pending" class="pending__btn pending__btn--danger" type="button"
+                aria-label="Clear answers waiting to sync">Clear</button>
+      </div>
+      <ul id="pending-list" class="pending__list" hidden></ul>
+
+      <!-- Typing an answer straight in: saved to the dashboard like any other. -->
+      <form id="add-answer-form" class="pending__add" hidden>
+        <label class="pending__field">
+          <span>Question</span>
+          <input id="add-question" class="input input--sm" placeholder="Are you over the age of 18?" autocomplete="off" />
+        </label>
+        <label class="pending__field">
+          <span>Answer</span>
+          <input id="add-answer-text" class="input input--sm" placeholder="Yes" autocomplete="off" />
+        </label>
+        <p id="add-answer-error" class="pending__error" role="alert" hidden></p>
+        <div class="pending__actions">
+          <button id="add-answer-save" class="pending__save" type="submit">Save answer</button>
+          <button id="add-answer-cancel" class="pending__btn" type="button">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Settings, grouped so the seven switches read as three decisions. -->
+    <details class="panel" id="settings-panel">
+      <summary class="panel__summary">
+        <span>Fill settings</span>
+        <span class="panel__chev" aria-hidden="true">
+          <svg viewBox="0 0 16 16" width="14" height="14"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </summary>
+      <div class="toggles" id="toggles"></div>
+
+      <div class="toggle-group">
+        <p class="toggle-group__title">Sign-in pages</p>
+        <label class="toggle">
+          <span class="toggle__text">
+            Sign in automatically
+            <small>Uses the Saved Answer named “Password”. Appli-Fill never stores a password of its own.</small>
+          </span>
+          <span class="switch">
+            <input id="account-autosubmit" type="checkbox" />
+            <span class="switch__slider"></span>
+          </span>
+        </label>
+      </div>
+    </details>
+
+    <footer class="footer">
+      <button id="open-dashboard-2" class="link">Dashboard</button>
+      <button id="add-answer" class="link">Add answer</button>
+      <button id="sync-btn" class="link">Sync now</button>
+      <button id="logout-btn" class="link link--danger">Log out</button>
+    </footer>
+  </section>
+
+  <!-- ============ Welcome after authentication ============ -->
+  <div id="welcome" class="welcome" role="status" aria-live="polite" hidden>
+    <div class="welcome__stage">
+      <div class="welcome__mark" aria-hidden="true">
+        <span class="welcome__ring"></span>
+        <span class="welcome__ring welcome__ring--late"></span>
+        <img class="welcome__logo" src="../icons/icon512.png" width="164" height="164" alt="Appli-Fill" />
+      </div>
+      <h1 class="welcome__title">Welcome ZApply</h1>
+      <p class="welcome__sub">You're connected. Open a job application and press Fill.</p>
+      <div class="welcome__form" aria-hidden="true">
+        <span class="welcome__field"><i></i></span>
+        <span class="welcome__field"><i></i></span>
+        <span class="welcome__field welcome__field--short"><i></i></span>
+      </div>
+    </div>
+    <span class="welcome__timer" aria-hidden="true"></span>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
